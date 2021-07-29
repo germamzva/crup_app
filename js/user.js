@@ -63,10 +63,7 @@ function dataLoader(data){
             htmlEl += '</div>';
             htmlEl += '<div class="collapse" id="viewTaskCollapse'+user.id+'">'
                 htmlEl += '<div class="card card-body">'
-                    htmlEl += '<div class="input-group mb-3">'
-                        htmlEl += '<input type="text" name="userName'+user.id+'" id="userName'+user.id+'" class="form-control form-control-lg" value="'+user.name+'">'
-                        htmlEl += '<input type="text" name="userPos'+user.id+'" id="userPos'+user.id+'" class="form-control form-control-lg" value="'+user.position+'">'
-                        htmlEl += '<button class="btn btn-success" type="button" onclick="saveUpdateUser('+user.id+')">Save Task</button>'
+                    htmlEl += '<div class="input-group userTaskLists'+user.id+'" id="userTaskLists" data-userid="'+user.id+'">'
                     htmlEl += '</div>'
                 htmlEl += '</div>'
             htmlEl += '</div>';
@@ -75,10 +72,13 @@ function dataLoader(data){
 
     const userList = document.querySelector(".user_list ul")
     userList.innerHTML = htmlEl
-}
 
-// initialize function
-getAllUser()
+    const userTask = document.querySelectorAll("#userTaskLists");
+    userTask.forEach(uti => {
+        const id = uti.getAttribute("data-userid")
+        getAssignUser(id)
+    })
+}
 
 // function delete user from the list
 function deleteUserList(id){
@@ -97,7 +97,6 @@ function deleteUser(res, id){
     } else {
         response.innerHTML = '<div class="alert alert-danger p-2" role="alert">'+res.msg+'/ # ' + id + '</div>';
     }
-
     setTimeout(() => {
         const li = document.getElementById("list_"+id);
         li.remove();
@@ -130,3 +129,31 @@ function saveUpdateUser(id){
     )
     getAllUser()
 }
+
+// get assign task for each user
+function getAssignUser(taskId){
+    fetch("user_functions/getAssignUser.php", {
+        method: "POST",
+        body: new URLSearchParams("user_id=" + taskId)
+    }).then(res => res.json())
+    .then(res => getAssignTasks(res, taskId))
+}
+
+function getAssignTasks(data, taskId){
+    let listTaskEl = ""
+    if(data.length != 0){
+        data.forEach(taskAssign => {
+            listTaskEl += '<button class="btn btn-primary me-1">'+taskAssign.title+'</button>';
+        })
+    } else {
+        listTaskEl += '<span class="text-danger alert alert-danger mb-0 p-1">No Task assign!</span>';
+    }
+
+    const userTask_id = document.querySelectorAll(".userTaskLists"+taskId);
+    userTask_id.forEach(uti => {
+        uti.innerHTML = listTaskEl
+    })
+}
+
+// initialize function
+getAllUser()
